@@ -1437,6 +1437,11 @@
             
             <div style="margin-top: 20px; font-size: 12px; color: #64748b;">
                 <p><strong>Demo Accounts:</strong></p>
+                <div style="text-align: left; margin-top: 10px;">
+                    <p><strong>Admin:</strong> admin / admin123</p>
+                    <p><strong>User:</strong> user / user123</p>
+                    <p><strong>Manager:</strong> manager / manager123</p>
+                </div>
             </div>
         </div>
     </div>
@@ -1542,6 +1547,18 @@
                         password: 'admin123', 
                         role: 'Administrator', 
                         fullName: 'System Administrator' 
+                    },
+                    manager: { 
+                        username: 'manager', 
+                        password: 'manager123', 
+                        role: 'Manager', 
+                        fullName: 'Business Manager' 
+                    },
+                    user: { 
+                        username: 'user', 
+                        password: 'user123', 
+                        role: 'User', 
+                        fullName: 'Standard User' 
                     },
                     logistics: { 
                         username: 'logistics', 
@@ -3440,7 +3457,7 @@
                                             <th>Schedule</th>
                                             <th>Status</th>
                                             <th>Actions</th>
-                                        </tr>
+                                    </tr>
                                     </thead>
                                     <tbody>
                                         <tr>
