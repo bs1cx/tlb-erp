@@ -21,6 +21,9 @@ export class Database {
     this.employees = JSON.parse(localStorage.getItem(`tlb_erp_${this.companyId}_employees`)) || [];
     this.titles = JSON.parse(localStorage.getItem(`tlb_erp_${this.companyId}_titles`)) || [];
     this.auditLogs = JSON.parse(localStorage.getItem(`tlb_erp_${this.companyId}_audit_logs`)) || [];
+    
+    // Companies tablosu için (Supabase entegrasyonu öncesi)
+    this.companies = JSON.parse(localStorage.getItem('tlb_erp_companies')) || this.getDefaultCompanies();
   }
 
   getDefaultSettings() {
@@ -32,6 +35,31 @@ export class Database {
       currency: "CAD",
       language: "en"
     };
+  }
+
+  getDefaultCompanies() {
+    return [
+      {
+        id: 'ABC123',
+        code: 'ABC123',
+        name: 'Demo Corporation',
+        industry: 'Technology',
+        employee_count: 50,
+        plan: 'enterprise',
+        status: 'active',
+        created_at: new Date().toISOString()
+      },
+      {
+        id: 'DEF456',
+        code: 'DEF456', 
+        name: 'Test Enterprises',
+        industry: 'Manufacturing',
+        employee_count: 25,
+        plan: 'premium',
+        status: 'active',
+        created_at: new Date().toISOString()
+      }
+    ];
   }
 
   createDefaultData() {
@@ -119,6 +147,43 @@ export class Database {
     localStorage.setItem(`tlb_erp_${this.companyId}_employees`, JSON.stringify(this.employees));
     localStorage.setItem(`tlb_erp_${this.companyId}_titles`, JSON.stringify(this.titles));
     localStorage.setItem(`tlb_erp_${this.companyId}_audit_logs`, JSON.stringify(this.auditLogs));
+    localStorage.setItem('tlb_erp_companies', JSON.stringify(this.companies));
+  }
+
+  // Company Management Methods
+  getCompanyByCode(code) {
+    return this.companies.find(company => company.code === code && company.status === 'active');
+  }
+
+  getAllCompanies() {
+    return this.companies.filter(company => company.status === 'active');
+  }
+
+  createCompany(companyData) {
+    const company = {
+      id: this.generateId(),
+      ...companyData,
+      status: 'active',
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    };
+    this.companies.push(company);
+    this.saveAllData();
+    return company;
+  }
+
+  updateCompany(companyId, updates) {
+    const companyIndex = this.companies.findIndex(c => c.id === companyId);
+    if (companyIndex !== -1) {
+      this.companies[companyIndex] = { 
+        ...this.companies[companyIndex], 
+        ...updates, 
+        updated_at: new Date().toISOString() 
+      };
+      this.saveAllData();
+      return true;
+    }
+    return false;
   }
 
   // Audit Log Methods

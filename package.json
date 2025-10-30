@@ -1,7 +1,16 @@
 {
-  "name": "thelebois-erp",
+  "name": "tlb-erp",
   "version": "1.0.0",
+  "type": "module",
   "scripts": {
-    "build": "echo 'Static site build successful'"
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.38.0"
+  },
+  "devDependencies": {
+    "vite": "^4.5.14"
   }
 }
