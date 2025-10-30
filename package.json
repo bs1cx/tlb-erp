@@ -1,18 +1,14 @@
-{
-  "name": "tlb-erp",
-  "version": "1.0.0",
-  "description": "Enterprise Resource Planning for Canadian SMEs",
-  "type": "module",
-  "scripts": {
-    "dev": "vite",
-    "build": "vite build",
-    "preview": "vite preview"
+// vite.config.js
+import { defineConfig } from 'vite'
+import react from '@vitejs/plugin-react'
+
+export default defineConfig({
+  plugins: [react()],
+  build: {
+    outDir: 'dist',
+    sourcemap: true
   },
-  "dependencies": {
-    "vue": "^3.3.0"
-  },
-  "devDependencies": {
-    "vite": "^4.4.0",
-    "@vitejs/plugin-vue": "^4.3.0"
+  server: {
+    port: 3000
   }
-}
+})
