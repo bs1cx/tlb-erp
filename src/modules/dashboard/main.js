@@ -5,103 +5,152 @@ export default {
       <div class="dashboard-header">
         <h1><i class="fas fa-tachometer-alt"></i> Dashboard</h1>
         <p>Welcome back, {{ user.fullName }}!</p>
-      </div>
-
-      <div class="stats-grid">
-        <div class="stat-card">
-          <div class="stat-icon">
-            <i class="fas fa-users"></i>
-          </div>
-          <div class="stat-content">
-            <div class="stat-value">156</div>
-            <div class="stat-label">Total Customers</div>
-          </div>
-        </div>
-
-        <div class="stat-card">
-          <div class="stat-icon">
-            <i class="fas fa-file-invoice-dollar"></i>
-          </div>
-          <div class="stat-content">
-            <div class="stat-value">$45,230</div>
-            <div class="stat-label">Monthly Revenue</div>
-          </div>
-        </div>
-
-        <div class="stat-card">
-          <div class="stat-icon">
-            <i class="fas fa-shopping-cart"></i>
-          </div>
-          <div class="stat-content">
-            <div class="stat-value">89</div>
-            <div class="stat-label">Pending Orders</div>
-          </div>
-        </div>
-
-        <div class="stat-card">
-          <div class="stat-icon">
-            <i class="fas fa-chart-line"></i>
-          </div>
-          <div class="stat-content">
-            <div class="stat-value">+12.5%</div>
-            <div class="stat-label">Growth Rate</div>
-          </div>
+        <div class="header-actions">
+          <button class="btn btn-primary" @click="refreshData">
+            <i class="fas fa-sync-alt"></i> Refresh
+          </button>
+          <button class="btn btn-secondary" @click="exportReport">
+            <i class="fas fa-download"></i> Export
+          </button>
         </div>
       </div>
 
+      <!-- Stats Grid -->
+      <dashboard-stats :stats="stats"></dashboard-stats>
+
+      <!-- Charts & Analytics -->
+      <div class="analytics-section">
+        <div class="chart-container">
+          <revenue-chart :data="chartData"></revenue-chart>
+        </div>
+        <div class="chart-container">
+          <performance-chart :data="performanceData"></performance-chart>
+        </div>
+      </div>
+
+      <!-- Recent Activities & Quick Actions -->
       <div class="dashboard-content">
-        <div class="recent-activity">
-          <h3>Recent Activity</h3>
-          <div class="activity-list">
-            <div class="activity-item">
-              <i class="fas fa-user-check"></i>
-              <div class="activity-content">
-                <strong>New customer registered</strong>
-                <span>Acme Corporation signed up</span>
-              </div>
-              <span class="activity-time">2 hours ago</span>
-            </div>
-            <div class="activity-item">
-              <i class="fas fa-file-invoice"></i>
-              <div class="activity-content">
-                <strong>Invoice paid</strong>
-                <span>INV-2023-0456 marked as paid</span>
-              </div>
-              <span class="activity-time">4 hours ago</span>
-            </div>
-          </div>
-        </div>
-
-        <div class="quick-actions">
-          <h3>Quick Actions</h3>
-          <div class="action-buttons">
-            <button class="btn btn-primary" @click="$router.push('/finance')">
-              <i class="fas fa-plus"></i> Create Invoice
-            </button>
-            <button class="btn btn-secondary" @click="$router.push('/crm')">
-              <i class="fas fa-user-plus"></i> Add Customer
-            </button>
-            <button class="btn btn-secondary">
-              <i class="fas fa-chart-bar"></i> View Reports
-            </button>
-          </div>
-        </div>
+        <recent-activities :activities="recentActivities"></recent-activities>
+        <quick-actions @action="handleQuickAction"></quick-actions>
       </div>
     </div>
   `,
 
+  components: {
+    'dashboard-stats': () => import('./components/stats-cards.js'),
+    'revenue-chart': () => import('./components/charts/revenue-chart.js'),
+    'performance-chart': () => import('./components/charts/performance-chart.js'),
+    'recent-activities': () => import('./components/recent-activities.js'),
+    'quick-actions': () => import('./components/quick-actions.js')
+  },
+
   data() {
     return {
-      user: {}
+      user: {},
+      stats: {
+        totalCustomers: 0,
+        monthlyRevenue: 0,
+        pendingOrders: 0,
+        growthRate: 0,
+        activeShipments: 0,
+        lowStockItems: 0
+      },
+      chartData: [],
+      performanceData: [],
+      recentActivities: []
     }
   },
 
-  mounted() {
+  async mounted() {
     const userData = localStorage.getItem('tlb_user')
     if (userData) {
       this.user = JSON.parse(userData)
+      await this.loadDashboardData()
     } else {
       this.$router.push('/login')
+    }
+  },
+
+  methods: {
+    async loadDashboardData() {
+      try {
+        // Stats data
+        this.stats = {
+          totalCustomers: 156,
+          monthlyRevenue: 45230,
+          pendingOrders: 23,
+          growthRate: 12.5,
+          activeShipments: 15,
+          lowStockItems: 8
+        }
+
+        // Chart data
+        this.chartData = [
+          { month: 'Jan', revenue: 40000 },
+          { month: 'Feb', revenue: 42000 },
+          { month: 'Mar', revenue: 38000 },
+          { month: 'Apr', revenue: 45000 },
+          { month: 'May', revenue: 45230 }
+        ]
+
+        // Performance data
+        this.performanceData = [
+          { metric: 'Delivery Rate', value: 89 },
+          { metric: 'Customer Satisfaction', value: 92 },
+          { metric: 'Order Accuracy', value: 98 }
+        ]
+
+        // Recent activities
+        this.recentActivities = [
+          {
+            icon: 'fas fa-user-check',
+            title: 'New customer registered',
+            description: 'Acme Corporation signed up',
+            time: '2 hours ago',
+            type: 'customer'
+          },
+          {
+            icon: 'fas fa-file-invoice',
+            title: 'Invoice paid',
+            description: 'INV-2023-0456 marked as paid',
+            time: '4 hours ago',
+            type: 'finance'
+          },
+          {
+            icon: 'fas fa-shipping-fast',
+            title: 'Shipment delivered',
+            description: 'Order #7894 delivered to Toronto',
+            time: '6 hours ago',
+            type: 'logistics'
+          }
+        ]
+
+      } catch (error) {
+        console.error('Error loading dashboard data:', error)
+      }
+    },
+
+    async refreshData() {
+      await this.loadDashboardData()
+    },
+
+    exportReport() {
+      // Export functionality
+      console.log('Exporting dashboard report...')
+    },
+
+    handleQuickAction(action) {
+      switch (action) {
+        case 'create_invoice':
+          this.$router.push('/finance')
+          break
+        case 'add_customer':
+          this.$router.push('/crm')
+          break
+        case 'new_shipment':
+          this.$router.push('/logistics')
+          break
+      }
     }
   }
 }

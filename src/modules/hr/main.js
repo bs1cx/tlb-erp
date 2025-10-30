@@ -1,107 +1,154 @@
-export default {
-  name: 'HRPage',
-  template: `
-    <div class="hr">
-      <div class="page-header">
-        <h1><i class="fas fa-user-tie"></i> Human Resources</h1>
-        <button class="btn btn-primary" @click="addEmployee">
-          <i class="fas fa-user-plus"></i> Add Employee
-        </button>
-      </div>
+import { HRStats } from './components/hr-stats.js';
+import { EmployeeList } from './components/employee-list.js';
+import { EmployeeModal } from './components/employee-modal.js';
 
-      <div class="hr-stats">
-        <div class="stat-card">
-          <div class="stat-value">24</div>
-          <div class="stat-label">Total Employees</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-value">3</div>
-          <div class="stat-label">On Leave</div>
-        </div>
-        <div class="stat-card">
-          <div class="stat-value">$85K</div>
-          <div class="stat-label">Monthly Payroll</div>
-        </div>
-      </div>
+export class HRModule {
+    constructor() {
+        this.hrStats = new HRStats();
+        this.employeeList = new EmployeeList();
+        this.employeeModal = new EmployeeModal();
+        this.initialized = false;
+    }
 
-      <div class="employees-section">
-        <h3>Employee Directory</h3>
-        <table class="data-table">
-          <thead>
-            <tr>
-              <th>Name</th>
-              <th>Position</th>
-              <th>Department</th>
-              <th>Email</th>
-              <th>Status</th>
-              <th>Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="employee in employees" :key="employee.id">
-              <td>{{ employee.name }}</td>
-              <td>{{ employee.position }}</td>
-              <td>{{ employee.department }}</td>
-              <td>{{ employee.email }}</td>
-              <td>
-                <span :class="['status-badge', employee.status]">
-                  {{ employee.status }}
-                </span>
-              </td>
-              <td>
-                <button class="btn btn-sm" @click="viewEmployee(employee)">
-                  <i class="fas fa-eye"></i>
-                </button>
-                <button class="btn btn-sm" @click="editEmployee(employee)">
-                  <i class="fas fa-edit"></i>
-                </button>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-  `,
+    async init() {
+        if (this.initialized) return;
 
-  data() {
-    return {
-      employees: [
-        {
-          id: 1,
-          name: 'John Smith',
-          position: 'Sales Manager',
-          department: 'Sales',
-          email: 'john@company.com',
-          status: 'active'
-        },
-        {
-          id: 2,
-          name: 'Sarah Johnson',
-          position: 'Accountant',
-          department: 'Finance',
-          email: 'sarah@company.com',
-          status: 'active'
+        try {
+            // Load HR styles
+            this.loadStyles();
+            
+            // Initialize components
+            this.employeeModal.init();
+            
+            this.initialized = true;
+            console.log('HR Module initialized');
+        } catch (error) {
+            console.error('HR Module initialization error:', error);
         }
-      ]
     }
-  },
 
-  methods: {
-    addEmployee() {
-      alert('Add employee functionality coming soon!')
-    },
-    viewEmployee(employee) {
-      alert(`Viewing employee: ${employee.name}`)
-    },
-    editEmployee(employee) {
-      alert(`Editing employee: ${employee.name}`)
-    }
-  },
+    async render() {
+        await this.init();
 
-  mounted() {
-    const user = localStorage.getItem('tlb_user')
-    if (!user) {
-      this.$router.push('/login')
+        const statsHTML = await this.hrStats.init();
+        const employeeListHTML = await this.employeeList.init();
+
+        return `
+            <div class="hr-module">
+                <div class="module-header">
+                    <div class="header-content">
+                        <h1><i class="fas fa-user-tie"></i> Human Resources</h1>
+                        <p>Manage employees, departments, and HR operations</p>
+                    </div>
+                    <div class="header-actions">
+                        <button class="btn btn-primary" onclick="hrModule.showAddEmployee()">
+                            <i class="fas fa-user-plus"></i> Add Employee
+                        </button>
+                        <button class="btn btn-secondary" onclick="hrModule.exportHRData()">
+                            <i class="fas fa-download"></i> Export
+                        </button>
+                    </div>
+                </div>
+
+                ${statsHTML}
+
+                <div class="quick-actions-section">
+                    <h3><i class="fas fa-bolt"></i> Quick Actions</h3>
+                    <div class="action-grid">
+                        <button class="action-card" onclick="hrModule.showAddEmployee()">
+                            <div class="action-icon">
+                                <i class="fas fa-user-plus"></i>
+                            </div>
+                            <span>Add Employee</span>
+                        </button>
+                        <button class="action-card" onclick="hrModule.manageDepartments()">
+                            <div class="action-icon">
+                                <i class="fas fa-sitemap"></i>
+                            </div>
+                            <span>Manage Departments</span>
+                        </button>
+                        <button class="action-card" onclick="hrModule.processPayroll()">
+                            <div class="action-icon">
+                                <i class="fas fa-money-bill-wave"></i>
+                            </div>
+                            <span>Process Payroll</span>
+                        </button>
+                        <button class="action-card" onclick="hrModule.generateReports()">
+                            <div class="action-icon">
+                                <i class="fas fa-chart-bar"></i>
+                            </div>
+                            <span>HR Reports</span>
+                        </button>
+                    </div>
+                </div>
+
+                ${employeeListHTML}
+            </div>
+        `;
     }
-  }
+
+    loadStyles() {
+        // Check if styles are already loaded
+        if (document.getElementById('hr-styles')) return;
+
+        const link = document.createElement('link');
+        link.id = 'hr-styles';
+        link.rel = 'stylesheet';
+        link.href = './src/modules/hr/styles/hr.css';
+        document.head.appendChild(link);
+    }
+
+    // Public methods
+    async showAddEmployee() {
+        this.employeeModal.open();
+    }
+
+    async editEmployee(employeeId) {
+        // Find employee data and open modal in edit mode
+        const employee = this.employeeList.employees.find(emp => emp.id === employeeId);
+        if (employee) {
+            this.employeeModal.open(employee);
+        }
+    }
+
+    async viewEmployee(employeeId) {
+        console.log('Viewing employee:', employeeId);
+        // Implement view employee details
+    }
+
+    async messageEmployee(employeeId) {
+        console.log('Messaging employee:', employeeId);
+        // Implement messaging functionality
+    }
+
+    async refresh() {
+        // Refresh the module
+        const contentArea = document.getElementById('contentArea');
+        if (contentArea) {
+            contentArea.innerHTML = await this.render();
+        }
+    }
+
+    async manageDepartments() {
+        console.log('Opening department management');
+        // Implement department management
+    }
+
+    async processPayroll() {
+        console.log('Processing payroll');
+        // Implement payroll processing
+    }
+
+    async generateReports() {
+        console.log('Generating HR reports');
+        // Implement report generation
+    }
+
+    async exportHRData() {
+        console.log('Exporting HR data');
+        // Implement data export
+    }
 }
+
+// Global instance
+window.hrModule = new HRModule();

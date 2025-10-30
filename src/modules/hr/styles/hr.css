@@ -1,0 +1,239 @@
+/* HR Module Styles */
+.hr-module {
+    padding: 20px;
+}
+
+.hr-stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 20px;
+    margin-bottom: 30px;
+}
+
+.hr-stats-grid .stat-card {
+    background: white;
+    padding: 24px;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.hr-stats-grid .stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.12);
+}
+
+.hr-stats-grid .stat-icon {
+    width: 60px;
+    height: 60px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    color: white;
+}
+
+.hr-stats-grid .stat-icon.employees { background: #3b82f6; }
+.hr-stats-grid .stat-icon.active { background: #10b981; }
+.hr-stats-grid .stat-icon.leave { background: #f59e0b; }
+.hr-stats-grid .stat-icon.departments { background: #8b5cf6; }
+
+.hr-stats-grid .stat-value {
+    font-size: 28px;
+    font-weight: bold;
+    color: #1e293b;
+    margin-bottom: 4px;
+}
+
+.hr-stats-grid .stat-label {
+    color: #64748b;
+    font-size: 14px;
+    margin-bottom: 4px;
+}
+
+.hr-stats-grid .stat-trend {
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.hr-stats-grid .stat-trend.positive { color: #10b981; }
+.hr-stats-grid .stat-trend.warning { color: #f59e0b; }
+
+/* Employee List Styles */
+.employee-list-section {
+    background: white;
+    padding: 24px;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+}
+
+.employee-info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.employee-id {
+    font-size: 11px;
+    color: #64748b;
+    font-family: monospace;
+}
+
+.department-badge {
+    padding: 4px 8px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 500;
+    text-transform: uppercase;
+}
+
+.department-sales { background: #e0f2fe; color: #0369a1; }
+.department-finance { background: #dcfce7; color: #166534; }
+.department-it { background: #f0f9ff; color: #0c4a6e; }
+.department-hr { background: #faf5ff; color: #7c3aed; }
+.department-marketing { background: #fef3c7; color: #92400e; }
+.department-operations { background: #ffe4e6; color: #be123c; }
+
+.status-active { background: #dcfce7; color: #166534; }
+.status-on-leave { background: #fef3c7; color: #92400e; }
+.status-inactive { background: #f1f5f9; color: #64748b; }
+
+.contact-info {
+    font-size: 12px;
+    color: #64748b;
+}
+
+.contact-info div {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    margin-bottom: 2px;
+}
+
+.contact-info i {
+    width: 12px;
+    color: #94a3b8;
+}
+
+/* Modal Styles */
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.5);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+}
+
+.modal-content {
+    background: white;
+    border-radius: 12px;
+    width: 90%;
+    max-width: 600px;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+.modal-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 24px;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.modal-body {
+    padding: 24px;
+}
+
+.form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+}
+
+.form-group {
+    margin-bottom: 16px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 6px;
+    font-weight: 500;
+    color: #374151;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+    width: 100%;
+    padding: 10px 12px;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    font-size: 14px;
+}
+
+.form-group textarea {
+    resize: vertical;
+    min-height: 80px;
+}
+
+.form-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-top: 24px;
+    padding-top: 20px;
+    border-top: 1px solid #e2e8f0;
+}
+
+/* Pagination */
+.pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 16px;
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid #e2e8f0;
+}
+
+.page-info {
+    color: #64748b;
+    font-size: 14px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .hr-stats-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .form-row {
+        grid-template-columns: 1fr;
+    }
+    
+    .list-header {
+        flex-direction: column;
+        gap: 12px;
+    }
+    
+    .list-actions {
+        width: 100%;
+    }
+    
+    .modal-content {
+        width: 95%;
+        margin: 20px;
+    }
+}
