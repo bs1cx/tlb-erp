@@ -1,24 +1,26 @@
 export class Database {
-  constructor() {
+  constructor(companyId = 'default') {
+    this.companyId = companyId;
     this.loadFromStorage();
     
-    // Varsaylan admin kullancs (eer yoksa)
-    if (this.users.length === 0) {
+    // Sadece default company için varsaylan data olutur
+    if (this.users.length === 0 && companyId === 'default') {
       this.createDefaultData();
     }
   }
 
   loadFromStorage() {
-    this.users = JSON.parse(localStorage.getItem('tlb_erp_users')) || [];
-    this.userRoles = JSON.parse(localStorage.getItem('tlb_erp_user_roles')) || [];
-    this.sessions = JSON.parse(localStorage.getItem('tlb_erp_sessions')) || [];
-    this.customers = JSON.parse(localStorage.getItem('tlb_erp_customers')) || [];
-    this.invoices = JSON.parse(localStorage.getItem('tlb_erp_invoices')) || [];
-    this.settings = JSON.parse(localStorage.getItem('tlb_erp_settings')) || this.getDefaultSettings();
-    this.revenues = JSON.parse(localStorage.getItem('tlb_erp_revenues')) || [];
-    this.employees = JSON.parse(localStorage.getItem('tlb_erp_employees')) || [];
-    this.titles = JSON.parse(localStorage.getItem('tlb_erp_titles')) || [];
-    this.auditLogs = JSON.parse(localStorage.getItem('tlb_erp_audit_logs')) || [];
+    // Tüm localStorage key'lerini companyId ile prefix'le
+    this.users = JSON.parse(localStorage.getItem(`tlb_erp_${this.companyId}_users`)) || [];
+    this.userRoles = JSON.parse(localStorage.getItem(`tlb_erp_${this.companyId}_user_roles`)) || [];
+    this.sessions = JSON.parse(localStorage.getItem(`tlb_erp_${this.companyId}_sessions`)) || [];
+    this.customers = JSON.parse(localStorage.getItem(`tlb_erp_${this.companyId}_customers`)) || [];
+    this.invoices = JSON.parse(localStorage.getItem(`tlb_erp_${this.companyId}_invoices`)) || [];
+    this.settings = JSON.parse(localStorage.getItem(`tlb_erp_${this.companyId}_settings`)) || this.getDefaultSettings();
+    this.revenues = JSON.parse(localStorage.getItem(`tlb_erp_${this.companyId}_revenues`)) || [];
+    this.employees = JSON.parse(localStorage.getItem(`tlb_erp_${this.companyId}_employees`)) || [];
+    this.titles = JSON.parse(localStorage.getItem(`tlb_erp_${this.companyId}_titles`)) || [];
+    this.auditLogs = JSON.parse(localStorage.getItem(`tlb_erp_${this.companyId}_audit_logs`)) || [];
   }
 
   getDefaultSettings() {
@@ -35,7 +37,7 @@ export class Database {
   createDefaultData() {
     console.log('Creating default TLB ERP data...');
     
-    // Varsaylan admin kullanc
+    // Varsaylan admin kullanc - companyId ekle
     const adminUser = {
       id: this.generateId(),
       username: 'admin',
@@ -43,6 +45,7 @@ export class Database {
       password: this.hashPassword('admin123'),
       fullName: 'System Administrator',
       role: 'admin',
+      companyId: this.companyId,
       isActive: true,
       createdAt: new Date().toISOString(),
       lastLogin: null
@@ -56,6 +59,7 @@ export class Database {
       password: this.hashPassword('accountant123'),
       fullName: 'Accountant User',
       role: 'user',
+      companyId: this.companyId,
       isActive: true,
       createdAt: new Date().toISOString(),
       lastLogin: null
@@ -69,6 +73,7 @@ export class Database {
       password: this.hashPassword('sales123'),
       fullName: 'Sales Representative',
       role: 'user',
+      companyId: this.companyId,
       isActive: true,
       createdAt: new Date().toISOString(),
       lastLogin: null
@@ -80,12 +85,14 @@ export class Database {
     const accountantPermissions = {
       id: this.generateId(),
       userId: accountantUser.id,
+      companyId: this.companyId,
       permissions: ['dashboard', 'finance', 'reports']
     };
 
     const salesPermissions = {
       id: this.generateId(),
       userId: salesUser.id,
+      companyId: this.companyId,
       permissions: ['dashboard', 'crm', 'sales']
     };
 
@@ -102,16 +109,16 @@ export class Database {
   }
 
   saveAllData() {
-    localStorage.setItem('tlb_erp_users', JSON.stringify(this.users));
-    localStorage.setItem('tlb_erp_user_roles', JSON.stringify(this.userRoles));
-    localStorage.setItem('tlb_erp_sessions', JSON.stringify(this.sessions));
-    localStorage.setItem('tlb_erp_customers', JSON.stringify(this.customers));
-    localStorage.setItem('tlb_erp_invoices', JSON.stringify(this.invoices));
-    localStorage.setItem('tlb_erp_settings', JSON.stringify(this.settings));
-    localStorage.setItem('tlb_erp_revenues', JSON.stringify(this.revenues));
-    localStorage.setItem('tlb_erp_employees', JSON.stringify(this.employees));
-    localStorage.setItem('tlb_erp_titles', JSON.stringify(this.titles));
-    localStorage.setItem('tlb_erp_audit_logs', JSON.stringify(this.auditLogs));
+    localStorage.setItem(`tlb_erp_${this.companyId}_users`, JSON.stringify(this.users));
+    localStorage.setItem(`tlb_erp_${this.companyId}_user_roles`, JSON.stringify(this.userRoles));
+    localStorage.setItem(`tlb_erp_${this.companyId}_sessions`, JSON.stringify(this.sessions));
+    localStorage.setItem(`tlb_erp_${this.companyId}_customers`, JSON.stringify(this.customers));
+    localStorage.setItem(`tlb_erp_${this.companyId}_invoices`, JSON.stringify(this.invoices));
+    localStorage.setItem(`tlb_erp_${this.companyId}_settings`, JSON.stringify(this.settings));
+    localStorage.setItem(`tlb_erp_${this.companyId}_revenues`, JSON.stringify(this.revenues));
+    localStorage.setItem(`tlb_erp_${this.companyId}_employees`, JSON.stringify(this.employees));
+    localStorage.setItem(`tlb_erp_${this.companyId}_titles`, JSON.stringify(this.titles));
+    localStorage.setItem(`tlb_erp_${this.companyId}_audit_logs`, JSON.stringify(this.auditLogs));
   }
 
   // Audit Log Methods
@@ -121,8 +128,9 @@ export class Database {
       userId: userId,
       action: action,
       details: details,
+      companyId: this.companyId,
       timestamp: new Date().toISOString(),
-      ip: 'localhost' // Browser'da IP alnamaz
+      ip: 'localhost'
     };
     this.auditLogs.push(log);
     // Son 1000 log'u tut
@@ -136,6 +144,7 @@ export class Database {
     const user = {
       id: this.generateId(),
       ...userData,
+      companyId: this.companyId,
       password: this.hashPassword(userData.password),
       isActive: true,
       createdAt: new Date().toISOString(),
@@ -158,7 +167,7 @@ export class Database {
   }
 
   updateUserPermissions(userId, permissions) {
-    const existingRole = this.userRoles.find(ur => ur.userId === userId);
+    const existingRole = this.userRoles.find(ur => ur.userId === userId && ur.companyId === this.companyId);
     
     if (existingRole) {
       existingRole.permissions = permissions;
@@ -166,6 +175,7 @@ export class Database {
       this.userRoles.push({
         id: this.generateId(),
         userId: userId,
+        companyId: this.companyId,
         permissions: permissions
       });
     }
@@ -174,21 +184,21 @@ export class Database {
   }
 
   getUserPermissions(userId) {
-    const userRole = this.userRoles.find(ur => ur.userId === userId);
+    const userRole = this.userRoles.find(ur => ur.userId === userId && ur.companyId === this.companyId);
     return userRole ? userRole.permissions : [];
   }
 
   // Dier metodlar...
   getUsers() {
-    return this.users.filter(user => user.role !== 'system');
+    return this.users.filter(user => user.role !== 'system' && user.companyId === this.companyId);
   }
 
   getUserById(id) {
-    return this.users.find(user => user.id === id);
+    return this.users.find(user => user.id === id && user.companyId === this.companyId);
   }
 
   updateUser(userId, updates) {
-    const userIndex = this.users.findIndex(user => user.id === userId);
+    const userIndex = this.users.findIndex(user => user.id === userId && user.companyId === this.companyId);
     if (userIndex !== -1) {
       this.users[userIndex] = { ...this.users[userIndex], ...updates };
       this.addAuditLog('system', 'user_updated', `User updated: ${userId}`);
@@ -199,12 +209,12 @@ export class Database {
   }
 
   deleteUser(userId) {
-    const userIndex = this.users.findIndex(user => user.id === userId);
+    const userIndex = this.users.findIndex(user => user.id === userId && user.companyId === this.companyId);
     if (userIndex !== -1 && this.users[userIndex].role !== 'admin') {
       this.users.splice(userIndex, 1);
       
       // User roles'tan da sil
-      const roleIndex = this.userRoles.findIndex(ur => ur.userId === userId);
+      const roleIndex = this.userRoles.findIndex(ur => ur.userId === userId && ur.companyId === this.companyId);
       if (roleIndex !== -1) {
         this.userRoles.splice(roleIndex, 1);
       }
@@ -214,5 +224,27 @@ export class Database {
       return true;
     }
     return false;
+  }
+
+  // Company management methods
+  switchCompany(companyId) {
+    this.companyId = companyId;
+    this.loadFromStorage();
+  }
+
+  // Mevcut company'yi temizle (demo için)
+  clearCompanyData() {
+    localStorage.removeItem(`tlb_erp_${this.companyId}_users`);
+    localStorage.removeItem(`tlb_erp_${this.companyId}_user_roles`);
+    localStorage.removeItem(`tlb_erp_${this.companyId}_sessions`);
+    localStorage.removeItem(`tlb_erp_${this.companyId}_customers`);
+    localStorage.removeItem(`tlb_erp_${this.companyId}_invoices`);
+    localStorage.removeItem(`tlb_erp_${this.companyId}_settings`);
+    localStorage.removeItem(`tlb_erp_${this.companyId}_revenues`);
+    localStorage.removeItem(`tlb_erp_${this.companyId}_employees`);
+    localStorage.removeItem(`tlb_erp_${this.companyId}_titles`);
+    localStorage.removeItem(`tlb_erp_${this.companyId}_audit_logs`);
+    
+    this.loadFromStorage();
   }
 }
