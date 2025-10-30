@@ -1,140 +1,88 @@
 import { defineStore } from 'pinia'
-import { APP_MODULES, canAccessModule } from '../utils/constants.js'
+import { authService } from '../services/authService.js'
 
 export const useUserStore = defineStore('user', {
   state: () => ({
     currentUser: null,
     currentCompany: null,
-    isAuthenticated: false,
-    availableModules: [],
-    userPermissions: []
+    permissions: [],
+    isAuthenticated: false
   }),
 
   getters: {
-    // Kullanc bilgileri
     getUser: (state) => state.currentUser,
     getCompany: (state) => state.currentCompany,
-    
-    // Yetki kontrolleri
     isAdmin: (state) => state.currentUser?.role === 'admin',
     isManager: (state) => state.currentUser?.role === 'manager',
-    
-    // Modül eriim kontrolleri (sadece role-based)
-    canAccessFinance: (state) => state.currentUser?.role === 'admin' || state.currentUser?.role === 'manager',
-    canAccessHR: (state) => state.currentUser?.role === 'admin' || state.currentUser?.role === 'manager',
-    canAccessReports: (state) => state.currentUser?.role === 'admin' || state.currentUser?.role === 'manager',
-    canAccessSettings: (state) => state.currentUser?.role === 'admin'
+    canAccess: (state) => (module) => {
+      if (!state.currentUser) return false
+      
+      const accessMatrix = {
+        admin: ['dashboard', 'finance', 'crm', 'hr', 'inventory', 'reports', 'settings'],
+        manager: ['dashboard', 'crm', 'hr', 'inventory', 'reports'],
+        user: ['dashboard', 'crm', 'inventory'],
+        guest: ['dashboard']
+      }
+
+      const allowedModules = accessMatrix[state.currentUser.role] || accessMatrix.guest
+      return allowedModules.includes(module)
+    }
   },
 
   actions: {
-    // Kullanc ve irket bilgisini ayarla
-    setUser(user, company) {
-      this.currentUser = user
-      this.currentCompany = company
-      this.isAuthenticated = true
-      this.updateAvailableModules()
-      this.updateUserPermissions()
-      
-      // Session storage'a kaydet
-      if (user && company) {
-        sessionStorage.setItem('current_user', JSON.stringify(user))
-        sessionStorage.setItem('current_company', JSON.stringify(company))
-      }
-    },
-
     // Session'dan kullancy yükle
     loadFromSession() {
       try {
-        const userData = sessionStorage.getItem('current_user')
-        const companyData = sessionStorage.getItem('current_company')
+        const companyStr = sessionStorage.getItem('current_company')
+        const userStr = sessionStorage.getItem('current_user')
         
-        if (userData && companyData) {
-          this.currentUser = JSON.parse(userData)
-          this.currentCompany = JSON.parse(companyData)
+        if (companyStr && userStr) {
+          this.currentCompany = JSON.parse(companyStr)
+          this.currentUser = JSON.parse(userStr)
           this.isAuthenticated = true
-          this.updateAvailableModules()
-          this.updateUserPermissions()
+          return true
         }
       } catch (error) {
-        console.error('Session yükleme hatas:', error)
+        console.error('Session load error:', error)
         this.logout()
+      }
+      return false
+    },
+
+    // Giri yap
+    async login(companyCode, username, password) {
+      try {
+        const result = await authService.login(companyCode, username, password)
+        
+        if (result.success) {
+          this.currentCompany = result.company
+          this.currentUser = result.user
+          this.isAuthenticated = true
+          return { success: true }
+        } else {
+          return { success: false, error: result.error }
+        }
+      } catch (error) {
+        console.error('Login error:', error)
+        return { success: false, error: error.message }
       }
     },
 
-    // Kullanc çk
+    // Çk yap
     logout() {
+      authService.logout()
       this.currentUser = null
       this.currentCompany = null
       this.isAuthenticated = false
-      this.availableModules = []
-      this.userPermissions = []
-      
-      // Session storage' temizle
-      sessionStorage.removeItem('current_user')
-      sessionStorage.removeItem('current_company')
+      this.permissions = []
     },
 
-    // Kullanc bilgisini güncelle
-    updateUser(updates) {
+    // Kullanc bilgilerini güncelle
+    updateUserProfile(updates) {
       if (this.currentUser) {
         this.currentUser = { ...this.currentUser, ...updates }
         sessionStorage.setItem('current_user', JSON.stringify(this.currentUser))
       }
-    },
-
-    // irket bilgisini güncelle
-    updateCompany(updates) {
-      if (this.currentCompany) {
-        this.currentCompany = { ...this.currentCompany, ...updates }
-        sessionStorage.setItem('current_company', JSON.stringify(this.currentCompany))
-        this.updateAvailableModules()
-      }
-    },
-
-    // Eriilebilir modülleri güncelle
-    updateAvailableModules() {
-      if (!this.currentUser || !this.currentCompany) {
-        this.availableModules = []
-        return
-      }
-
-      this.availableModules = Object.values(APP_MODULES).filter(module => 
-        canAccessModule(this.currentUser, this.currentCompany, module.id)
-      )
-    },
-
-    // Kullanc izinlerini güncelle
-    updateUserPermissions() {
-      if (!this.currentUser) {
-        this.userPermissions = []
-        return
-      }
-
-      // Basit izin sistemi - sadece role-based
-      const basePermissions = ['dashboard'] // Tüm kullanclar dashboard'a eriebilir
-      
-      if (this.currentUser.role === 'admin') {
-        this.userPermissions = [...basePermissions, 'all']
-      } else if (this.currentUser.role === 'manager') {
-        this.userPermissions = [...basePermissions, 'crm', 'sales', 'reports']
-      } else {
-        this.userPermissions = [...basePermissions, 'crm']
-      }
-    },
-
-    // Modül eriim kontrolü
-    canAccess(module) {
-      return canAccessModule(this.currentUser, this.currentCompany, module)
-    },
-
-    // Plan yükseltme kontrolü KALDIRILDI
-    // canUpgradePlan() {
-    //   return this.currentCompany && this.currentCompany.plan !== 'enterprise'
-    // },
-
-    // Demo mod kontrolü
-    isDemoMode() {
-      return this.currentCompany?.code === 'ABC123' || this.currentCompany?.code === 'DEF456'
     }
   }
 })

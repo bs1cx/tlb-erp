@@ -18,20 +18,17 @@ export class CompanyLogin {
           <form id="companyLoginForm" class="login-form">
             <div class="form-group">
               <label for="companyCode">irket Kodu:</label>
-              <input type="text" id="companyCode" required placeholder="Örn: ABC123 veya DEF456" value="ABC123">
-              <small class="form-hint">Demo kodlar: ABC123 (Enterprise) veya DEF456 (Premium)</small>
+              <input type="text" id="companyCode" required placeholder="irket kodunuzu giriniz">
             </div>
             
             <div class="form-group">
               <label for="username">Kullanc Ad:</label>
-              <input type="text" id="username" required placeholder="admin veya user" value="admin">
-              <small class="form-hint">Demo kullanclar: admin / user</small>
+              <input type="text" id="username" required placeholder="Kullanc adnz giriniz">
             </div>
             
             <div class="form-group">
               <label for="password">ifre:</label>
-              <input type="password" id="password" required placeholder="admin123 veya user123" value="admin123">
-              <small class="form-hint">Demo ifreler: admin123 / user123</small>
+              <input type="password" id="password" required placeholder="ifrenizi giriniz">
             </div>
             
             <button type="submit" class="login-btn">
@@ -40,22 +37,6 @@ export class CompanyLogin {
           </form>
           
           <div id="loginMessage" class="message"></div>
-          
-          <div class="demo-info">
-            <h4><i class="fas fa-info-circle"></i> Demo Bilgileri:</h4>
-            <div class="demo-company">
-              <strong>ABC123 - Enterprise Plan</strong>
-              <p> Tüm modüllere eriim</p>
-              <p> Kullanc: admin / admin123</p>
-              <p> Kullanc: user / user123</p>
-            </div>
-            <div class="demo-company">
-              <strong>DEF456 - Premium Plan</strong>
-              <p> Snrl modül eriimi</p>
-              <p> Kullanc: admin / admin123</p>
-              <p> Kullanc: user / user123</p>
-            </div>
-          </div>
 
           <div class="login-footer">
             <p>TLB ERP Multi-Company System © 2024</p>
@@ -84,9 +65,6 @@ export class CompanyLogin {
 
       try {
         const { authService } = await import('../services/authService.js')
-        
-        // Demo data'y initialize et (ilk giri için)
-        authService.initializeDemoData(companyCode)
         
         const result = await authService.login(companyCode, username, password)
         

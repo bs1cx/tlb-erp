@@ -1,9 +1,7 @@
-import { MasterDatabase } from './masterDatabase.js'
 import { createClient } from '@supabase/supabase-js'
 
 export class AuthService {
   constructor() {
-    this.masterDb = new MasterDatabase()
     this.currentCompany = null
     this.currentUser = null
     this.supabase = null
@@ -19,7 +17,8 @@ export class AuthService {
       this.supabase = createClient(supabaseUrl, supabaseKey)
       console.log('Supabase balants balatld')
     } else {
-      console.warn('Supabase environment variables not found, using localStorage fallback')
+      console.error('Supabase environment variables not found')
+      throw new Error('Supabase yaplandrmas bulunamad')
     }
   }
 
@@ -28,25 +27,22 @@ export class AuthService {
     try {
       console.log('Giri denemesi:', { companyCode, username })
 
-      // 1. Önce localStorage'dan irket kontrolü (fallback)
-      let company = this.getCompanyFromLocalStorage(companyCode)
-      
-      // 2. Eer Supabase balants varsa, gerçek veritabanndan kontrol et
-      if (this.supabase && !company) {
-        company = await this.getCompanyFromSupabase(companyCode)
-      }
-
+      // 1. irketi Supabase'den kontrol et
+      const company = await this.getCompanyFromSupabase(companyCode)
       if (!company) {
         throw new Error('irket bulunamad - Geçersiz irket kodu')
       }
 
-      console.log('irket bulundu:', company.name)
+      console.log('irket bulundu:', company.company_name)
 
-      // 3. Kullancy bul
-      const user = await this.findUser(companyCode, username, password)
+      // 2. Kullancy irket içinde bul
+      const user = await this.authenticateUser(company.id, username, password)
       if (!user) {
         throw new Error('Kullanc bulunamad veya ifre hatal')
       }
+
+      // 3. Son giri tarihini güncelle
+      await this.updateLastLogin(user.id)
 
       // 4. Giri baarl
       this.currentCompany = company
@@ -55,8 +51,10 @@ export class AuthService {
       // Session storage'a kaydet
       sessionStorage.setItem('current_company', JSON.stringify(company))
       sessionStorage.setItem('current_user', JSON.stringify(user))
+      sessionStorage.setItem('company_id', company.id)
+      sessionStorage.setItem('user_id', user.id)
 
-      console.log('Giri baarl:', user.fullName)
+      console.log('Giri baarl:', user.full_name)
 
       return {
         success: true,
@@ -73,92 +71,70 @@ export class AuthService {
     }
   }
 
-  // LocalStorage'dan irket bul
-  getCompanyFromLocalStorage(companyCode) {
-    const companies = JSON.parse(localStorage.getItem('tlb_erp_companies')) || []
-    return companies.find(c => c.code === companyCode && c.status === 'active')
-  }
-
-  // Supabase'dan irket bul
+  // Supabase'den irket bul
   async getCompanyFromSupabase(companyCode) {
     try {
       const { data, error } = await this.supabase
         .from('companies')
         .select('*')
-        .eq('code', companyCode)
-        .eq('status', 'active')
+        .eq('company_code', companyCode.toUpperCase())
+        .eq('is_active', true)
         .single()
 
-      if (error) throw error
+      if (error) {
+        console.error('irket sorgu hatas:', error)
+        return null
+      }
       return data
     } catch (error) {
-      console.error('Supabase irket sorgu hatas:', error)
+      console.error('irket sorgu hatas:', error)
       return null
     }
   }
 
-  // Kullanc bul (localStorage fallback)
-  async findUser(companyCode, username, password) {
-    // Önce localStorage'dan kontrol et
-    const users = JSON.parse(localStorage.getItem(`tlb_erp_${companyCode}_users`)) || []
-    const passwordHash = this.hashPassword(password)
-    
-    const user = users.find(u => 
-      u.username === username && 
-      u.companyId === companyCode &&
-      u.isActive === true &&
-      u.password === passwordHash
-    )
+  // Kullanc dorulama (Supabase)
+  async authenticateUser(companyId, username, password) {
+    try {
+      // Kullancy irket içinde bul
+      const { data: user, error } = await this.supabase
+        .from('users')
+        .select('*')
+        .eq('company_id', companyId)
+        .eq('username', username)
+        .eq('is_active', true)
+        .single()
 
-    if (user) return user
-
-    // Supabase'dan kullanc kontrolü
-    if (this.supabase) {
-      try {
-        const { data, error } = await this.supabase
-          .from('users')
-          .select('*')
-          .eq('username', username)
-          .eq('company_id', companyCode)
-          .eq('status', 'active')
-          .single()
-
-        if (error) throw error
-        
-        // ifre kontrolü (pratikte bcrypt kullanlmal)
-        if (data && this.verifyPassword(password, data.password_hash)) {
-          return this.formatUserFromSupabase(data)
-        }
-      } catch (error) {
-        console.error('Supabase kullanc sorgu hatas:', error)
+      if (error) {
+        console.error('Kullanc sorgu hatas:', error)
+        return null
       }
-    }
 
-    return null
-  }
+      if (!user) {
+        return null
+      }
 
-  // Supabase kullanc formatn uygulama formatna çevir
-  formatUserFromSupabase(supabaseUser) {
-    return {
-      id: supabaseUser.id,
-      username: supabaseUser.username,
-      email: supabaseUser.email,
-      password: supabaseUser.password_hash, // Hash'li ifre
-      fullName: supabaseUser.name,
-      role: supabaseUser.role,
-      companyId: supabaseUser.company_id,
-      isActive: supabaseUser.status === 'active',
-      createdAt: supabaseUser.created_at,
-      lastLogin: supabaseUser.last_login
+      // ifre dorulama
+      const isValidPassword = await this.verifyPassword(password, user.password_hash)
+      if (!isValidPassword) {
+        return null
+      }
+
+      return this.formatUserFromSupabase(user)
+
+    } catch (error) {
+      console.error('Kullanc dorulama hatas:', error)
+      return null
     }
   }
 
-  // ifre dorulama (basit hash karlatrma)
-  verifyPassword(inputPassword, storedHash) {
-    return this.hashPassword(inputPassword) === storedHash
+  // ifre dorulama (basit hash karlatrma - production'da bcrypt kullanlmal)
+  async verifyPassword(inputPassword, storedHash) {
+    // Bu örnekte basit hash kullanyoruz, production'da bcrypt kullann
+    const inputHash = this.hashPassword(inputPassword)
+    return inputHash === storedHash
   }
 
-  // ifre hashleme
+  // ifre hashleme (basit örnek - production'da bcrypt kullann)
   hashPassword(password) {
     let hash = 0
     for (let i = 0; i < password.length; i++) {
@@ -169,90 +145,153 @@ export class AuthService {
     return hash.toString()
   }
 
+  // Supabase kullanc formatn uygulama formatna çevir
+  formatUserFromSupabase(supabaseUser) {
+    return {
+      id: supabaseUser.id,
+      username: supabaseUser.username,
+      email: supabaseUser.email,
+      full_name: supabaseUser.full_name,
+      role: supabaseUser.role,
+      company_id: supabaseUser.company_id,
+      is_active: supabaseUser.is_active,
+      created_at: supabaseUser.created_at,
+      last_login: supabaseUser.last_login
+    }
+  }
+
+  // Son giri tarihini güncelle
+  async updateLastLogin(userId) {
+    try {
+      const { error } = await this.supabase
+        .from('users')
+        .update({ 
+          last_login: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', userId)
+
+      if (error) {
+        console.error('Son giri güncelleme hatas:', error)
+      }
+    } catch (error) {
+      console.error('Son giri güncelleme hatas:', error)
+    }
+  }
+
   // Çk
   logout() {
     this.currentCompany = null
     this.currentUser = null
     sessionStorage.removeItem('current_company')
     sessionStorage.removeItem('current_user')
+    sessionStorage.removeItem('company_id')
+    sessionStorage.removeItem('user_id')
   }
 
   // Giri kontrolü
   isLoggedIn() {
-    return !!(this.currentCompany && this.currentUser)
+    const company = sessionStorage.getItem('current_company')
+    const user = sessionStorage.getItem('current_user')
+    return !!(company && user)
   }
 
-  // Plan bazl özellik kontrolü
-  canAccessFeature(feature) {
-    if (!this.currentCompany) return false
+  // Mevcut kullancy getir
+  getCurrentUser() {
+    if (this.currentUser) return this.currentUser
     
-    const planFeatures = {
-      'starter': ['dashboard', 'crm', 'inventory'],
-      'premium': ['dashboard', 'crm', 'inventory', 'finance', 'reports'],
-      'enterprise': ['dashboard', 'crm', 'inventory', 'finance', 'reports', 'hr', 'sales', 'settings']
+    const userStr = sessionStorage.getItem('current_user')
+    if (userStr) {
+      this.currentUser = JSON.parse(userStr)
+      return this.currentUser
     }
+    return null
+  }
+
+  // Mevcut irketi getir
+  getCurrentCompany() {
+    if (this.currentCompany) return this.currentCompany
     
-    const features = planFeatures[this.currentCompany.plan] || planFeatures.starter
-    return features.includes(feature)
+    const companyStr = sessionStorage.getItem('current_company')
+    if (companyStr) {
+      this.currentCompany = JSON.parse(companyStr)
+      return this.currentCompany
+    }
+    return null
   }
 
-  // Demo data olutur (ilk giri için)
-  initializeDemoData(companyCode) {
-    const demoUsers = [
-      {
-        id: 'demo_admin_' + companyCode,
-        username: 'admin',
-        email: `admin@${companyCode}.com`,
-        password: this.hashPassword('admin123'),
-        fullName: 'Demo Administrator',
-        role: 'admin',
-        companyId: companyCode,
-        isActive: true,
-        createdAt: new Date().toISOString()
-      },
-      {
-        id: 'demo_user_' + companyCode,
-        username: 'user',
-        email: `user@${companyCode}.com`,
-        password: this.hashPassword('user123'),
-        fullName: 'Demo User',
-        role: 'user',
-        companyId: companyCode,
-        isActive: true,
-        createdAt: new Date().toISOString()
-      }
-    ]
+  // Demo data olutur (ilk kurulum için)
+  async initializeDemoData() {
+    try {
+      // Demo irketleri olutur
+      const demoCompanies = [
+        {
+          company_code: 'ABC123',
+          company_name: 'Demo Corporation',
+          is_active: true
+        },
+        {
+          company_code: 'DEF456',
+          company_name: 'Test Enterprises', 
+          is_active: true
+        }
+      ]
 
-    localStorage.setItem(`tlb_erp_${companyCode}_users`, JSON.stringify(demoUsers))
-    localStorage.setItem(`tlb_erp_${companyCode}_settings`, JSON.stringify({
-      companyName: companyCode === 'ABC123' ? 'Demo Corporation' : 'Test Enterprises',
-      companyAddress: "123 Business Street",
-      currency: "USD",
-      language: "en"
-    }))
-
-    console.log('Demo data oluturuldu:', companyCode)
-  }
-
-  // Tüm irketleri getir
-  async getAllCompanies() {
-    if (this.supabase) {
-      try {
-        const { data, error } = await this.supabase
+      for (const companyData of demoCompanies) {
+        const { data: existingCompany } = await this.supabase
           .from('companies')
-          .select('*')
-          .eq('status', 'active')
-          .order('name')
+          .select('id')
+          .eq('company_code', companyData.company_code)
+          .single()
 
-        if (error) throw error
-        return data
-      } catch (error) {
-        console.error('irket listeleme hatas:', error)
+        if (!existingCompany) {
+          const { data: newCompany, error } = await this.supabase
+            .from('companies')
+            .insert([companyData])
+            .select()
+            .single()
+
+          if (error) {
+            console.error('Demo irket oluturma hatas:', error)
+            continue
+          }
+
+          // Demo kullanclar olutur
+          const demoUsers = [
+            {
+              company_id: newCompany.id,
+              username: 'admin',
+              email: `admin@${companyData.company_code.toLowerCase()}.com`,
+              password_hash: this.hashPassword('admin123'),
+              full_name: 'Demo Administrator',
+              role: 'admin',
+              is_active: true
+            },
+            {
+              company_id: newCompany.id,
+              username: 'user',
+              email: `user@${companyData.company_code.toLowerCase()}.com`,
+              password_hash: this.hashPassword('user123'),
+              full_name: 'Demo User',
+              role: 'user',
+              is_active: true
+            }
+          ]
+
+          const { error: userError } = await this.supabase
+            .from('users')
+            .insert(demoUsers)
+
+          if (userError) {
+            console.error('Demo kullanc oluturma hatas:', userError)
+          } else {
+            console.log('Demo data oluturuldu:', companyData.company_code)
+          }
+        }
       }
+    } catch (error) {
+      console.error('Demo data oluturma hatas:', error)
     }
-    
-    // Fallback: localStorage
-    return JSON.parse(localStorage.getItem('tlb_erp_companies')) || []
   }
 }
 

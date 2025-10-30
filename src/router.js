@@ -1,16 +1,15 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import { useUserStore } from './stores/user.js'
+import { authService } from './services/authService.js'
 
 // Lazy-loaded components for better performance
-const CompanyLogin = () => import('./modules/auth/login.js').then(m => m.default || m)
-const AdminLogin = () => import('./modules/admin/auth/login.js').then(m => m.default || m)
-const AdminDashboard = () => import('./modules/admin/dashboard/main.js').then(m => m.default || m)
+const CompanyLogin = () => import('./components/CompanyLogin.js').then(m => m.default || m)
 const Dashboard = () => import('./modules/dashboard/main.js').then(m => m.default || m)
 const Finance = () => import('./modules/finance/main.js').then(m => m.default || m)
 const CRM = () => import('./modules/crm/main.js').then(m => m.default || m)
 const HR = () => import('./modules/hr/main.js').then(m => m.default || m)
 const Inventory = () => import('./modules/inventory/main.js').then(m => m.default || m)
 const Reports = () => import('./modules/reports/main.js').then(m => m.default || m)
+const Settings = () => import('./modules/settings/main.js').then(m => m.default || m)
 
 const routes = [
   {
@@ -18,18 +17,6 @@ const routes = [
     name: 'login',
     component: CompanyLogin,
     meta: { requiresAuth: false }
-  },
-  {
-    path: '/admin/login',
-    name: 'admin-login',
-    component: AdminLogin,
-    meta: { requiresAuth: false, adminOnly: true }
-  },
-  {
-    path: '/admin',
-    name: 'admin-dashboard',
-    component: AdminDashboard,
-    meta: { requiresAuth: true, adminOnly: true }
   },
   {
     path: '/',
@@ -68,6 +55,12 @@ const routes = [
     meta: { requiresAuth: true, module: 'reports' }
   },
   {
+    path: '/settings',
+    name: 'settings',
+    component: Settings,
+    meta: { requiresAuth: true, module: 'settings' }
+  },
+  {
     path: '/:pathMatch(.*)*',
     redirect: '/'
   }
@@ -80,33 +73,52 @@ const router = createRouter({
 
 // Auth guard
 router.beforeEach((to, from, next) => {
-  const userStore = useUserStore()
-  
-  // Load user from session if not loaded
-  if (!userStore.isAuthenticated) {
-    userStore.loadFromSession()
-  }
-
   const requiresAuth = to.matched.some(record => record.meta.requiresAuth)
   const requiresModule = to.meta.module
-  const adminOnly = to.matched.some(record => record.meta.adminOnly)
 
-  if (requiresAuth && !userStore.isAuthenticated) {
-    // Redirect to appropriate login
-    if (adminOnly) {
-      next('/admin/login')
+  // Giri sayfasna eriim kontrolü
+  if (to.path === '/login' && authService.isLoggedIn()) {
+    // Zaten giri yapm kullancy dashboard'a yönlendir
+    next('/')
+    return
+  }
+
+  if (requiresAuth && !authService.isLoggedIn()) {
+    // Giri yapmam kullancy login sayfasna yönlendir
+    next('/login')
+  } else if (requiresAuth && requiresModule) {
+    // Modül eriim kontrolü
+    const user = authService.getCurrentUser()
+    const company = authService.getCurrentCompany()
+    
+    if (user && company) {
+      // Basit rol bazl eriim kontrolü
+      const hasAccess = this.checkModuleAccess(user.role, requiresModule)
+      if (hasAccess) {
+        next()
+      } else {
+        // Eriim izni yoksa dashboard'a yönlendir
+        next('/')
+      }
     } else {
       next('/login')
     }
-  } else if (requiresAuth && adminOnly && !userStore.isAdmin) {
-    // Redirect to regular app if not admin
-    next('/')
-  } else if (requiresAuth && requiresModule && !userStore.canAccess(requiresModule)) {
-    // Redirect to dashboard if user doesn't have access to the module
-    next('/')
   } else {
     next()
   }
 })
+
+// Modül eriim kontrolü
+router.checkModuleAccess = (userRole, module) => {
+  const accessMatrix = {
+    admin: ['dashboard', 'finance', 'crm', 'hr', 'inventory', 'reports', 'settings'],
+    manager: ['dashboard', 'crm', 'hr', 'inventory', 'reports'],
+    user: ['dashboard', 'crm', 'inventory'],
+    guest: ['dashboard']
+  }
+
+  const allowedModules = accessMatrix[userRole] || accessMatrix.guest
+  return allowedModules.includes(module)
+}
 
 export default router

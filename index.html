@@ -21,6 +21,198 @@
             display: none !important;
         }
         
+        /* Company Login Styles */
+        .company-login-container {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #1e40af 0%, #1e293b 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        .company-login-box {
+            background: white;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            width: 100%;
+            max-width: 480px;
+        }
+        
+        .company-login-header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        
+        .company-login-header h2 {
+            font-size: 28px;
+            font-weight: bold;
+            color: #1e40af;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        
+        .company-login-header h2 span {
+            color: #dc2626;
+        }
+        
+        .company-login-subtitle {
+            color: #64748b;
+            font-size: 16px;
+        }
+        
+        .company-login-form {
+            text-align: left;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #374151;
+        }
+        
+        .form-group input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid #d1d5db;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.2s;
+        }
+        
+        .form-group input:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+        
+        .form-hint {
+            display: block;
+            margin-top: 5px;
+            font-size: 12px;
+            color: #6b7280;
+        }
+        
+        .company-login-btn {
+            width: 100%;
+            padding: 12px 20px;
+            background: #2563eb;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 500;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        
+        .company-login-btn:hover:not(:disabled) {
+            background: #1e40af;
+        }
+        
+        .company-login-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        
+        .login-message {
+            margin-top: 15px;
+            padding: 12px;
+            border-radius: 6px;
+            font-size: 14px;
+            text-align: center;
+        }
+        
+        .login-info-message {
+            background: #dbeafe;
+            color: #1e40af;
+            border: 1px solid #93c5fd;
+        }
+        
+        .login-success-message {
+            background: #dcfce7;
+            color: #166534;
+            border: 1px solid #86efac;
+        }
+        
+        .login-error-message {
+            background: #fef2f2;
+            color: #dc2626;
+            border: 1px solid #fecaca;
+        }
+        
+        .company-login-footer {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #e5e7eb;
+            color: #6b7280;
+            font-size: 14px;
+            text-align: center;
+        }
+        
+        .demo-info {
+            margin-top: 25px;
+            padding: 15px;
+            background: #f8fafc;
+            border-radius: 8px;
+            text-align: left;
+        }
+        
+        .demo-info h4 {
+            color: #374151;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+        }
+        
+        .demo-company {
+            margin-bottom: 15px;
+            padding: 12px;
+            background: white;
+            border-radius: 6px;
+            border-left: 4px solid #3b82f6;
+        }
+        
+        .demo-company:last-child {
+            margin-bottom: 0;
+        }
+        
+        .demo-company strong {
+            color: #1e40af;
+            font-size: 14px;
+        }
+        
+        .demo-company p {
+            margin: 4px 0;
+            font-size: 12px;
+            color: #6b7280;
+        }
+
+        .spinner {
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        /* Orijinal CSS Styles (Aynen Korundu) */
         /* Login Styles */
         #loginScreen {
             min-height: 100vh;
@@ -55,26 +247,6 @@
         .login-subtitle {
             color: #64748b;
             margin-bottom: 30px;
-        }
-        
-        .form-group {
-            margin-bottom: 20px;
-            text-align: left;
-        }
-        
-        .form-group label {
-            display: block;
-            margin-bottom: 8px;
-            font-weight: 500;
-            color: #374151;
-        }
-        
-        .form-group input {
-            width: 100%;
-            padding: 12px 16px;
-            border: 1px solid #d1d5db;
-            border-radius: 8px;
-            font-size: 16px;
         }
         
         .btn {
@@ -1414,8 +1586,64 @@
     </style>
 </head>
 <body>
-    <!-- Login Screen -->
-    <div id="loginScreen">
+    <!-- Company Login Screen -->
+    <div id="companyLoginScreen" class="company-login-container">
+        <div class="company-login-box">
+            <div class="company-login-header">
+                <h2><i class="fas fa-building"></i> TLB<span> ERP</span></h2>
+                <p class="company-login-subtitle">Çok irketli  Yönetim Sistemine Ho Geldiniz</p>
+            </div>
+            
+            <form id="companyLoginForm" class="company-login-form">
+                <div class="form-group">
+                    <label for="companyCode">irket Kodu:</label>
+                    <input type="text" id="companyCode" required placeholder="irket kodunuzu giriniz">
+                    <small class="form-hint">Örnek: ABC123 veya DEF456</small>
+                </div>
+                
+                <div class="form-group">
+                    <label for="companyUsername">Kullanc Ad:</label>
+                    <input type="text" id="companyUsername" required placeholder="Kullanc adnz giriniz">
+                    <small class="form-hint">Örnek: admin veya user</small>
+                </div>
+                
+                <div class="form-group">
+                    <label for="companyPassword">ifre:</label>
+                    <input type="password" id="companyPassword" required placeholder="ifrenizi giriniz">
+                    <small class="form-hint">Örnek: admin123 veya user123</small>
+                </div>
+                
+                <button type="submit" class="company-login-btn">
+                    <i class="fas fa-sign-in-alt"></i> Giri Yap
+                </button>
+            </form>
+            
+            <div id="companyLoginMessage" class="login-message"></div>
+            
+            <div class="demo-info">
+                <h4><i class="fas fa-info-circle"></i> Demo Bilgileri:</h4>
+                <div class="demo-company">
+                    <strong>ABC123 - Enterprise Plan</strong>
+                    <p> Tüm modüllere eriim</p>
+                    <p> Kullanc: admin / admin123</p>
+                    <p> Kullanc: user / user123</p>
+                </div>
+                <div class="demo-company">
+                    <strong>DEF456 - Premium Plan</strong>
+                    <p> Snrl modül eriimi</p>
+                    <p> Kullanc: admin / admin123</p>
+                    <p> Kullanc: user / user123</p>
+                </div>
+            </div>
+
+            <div class="company-login-footer">
+                <p>TLB ERP Multi-Company System © 2024</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Original Login Screen (Hidden) -->
+    <div id="loginScreen" class="hidden">
         <div class="login-card">
             <div class="login-logo">TLB<span> ERP</span></div>
             <div class="login-subtitle">Complete Business Management Solution</div>
@@ -1502,41 +1730,122 @@
     </div>
 
     <script>
+        // TLB ERP Application with Supabase Integration
         class TLBErpApp {
             constructor() {
                 this.currentModule = 'dashboard';
                 this.currentUser = null;
+                this.currentCompany = null;
+                this.authService = null;
                 this.init();
             }
 
-            init() {
+            async init() {
+                await this.loadAuthService();
                 this.setupEventListeners();
                 this.checkAuth();
-                this.loadModule('dashboard');
+                
+                if (this.isAuthenticated()) {
+                    this.loadModule('dashboard');
+                }
+            }
+
+            async loadAuthService() {
+                try {
+                    // AuthService modülünü dinamik olarak import et
+                    const module = await import('./src/services/authService.js');
+                    this.authService = module.authService;
+                    console.log(' AuthService loaded successfully');
+                } catch (error) {
+                    console.error(' Failed to load AuthService:', error);
+                    this.showCompanyLoginMessage('<i class="fas fa-exclamation-triangle"></i> Auth servisi yüklenemedi. Lütfen sayfay yenileyin.', 'error');
+                }
             }
 
             setupEventListeners() {
-                // Login form
-                document.getElementById('loginForm').addEventListener('submit', (e) => {
-                    e.preventDefault();
-                    this.handleLogin();
-                });
+                // Company login form
+                const companyLoginForm = document.getElementById('companyLoginForm');
+                if (companyLoginForm) {
+                    companyLoginForm.addEventListener('submit', (e) => {
+                        e.preventDefault();
+                        this.handleCompanyLogin();
+                    });
+                }
+
+                // Original login form (backup)
+                const loginForm = document.getElementById('loginForm');
+                if (loginForm) {
+                    loginForm.addEventListener('submit', (e) => {
+                        e.preventDefault();
+                        this.handleOriginalLogin();
+                    });
+                }
 
                 // Logout button
-                document.getElementById('logoutBtn').addEventListener('click', () => {
-                    this.handleLogout();
-                });
+                const logoutBtn = document.getElementById('logoutBtn');
+                if (logoutBtn) {
+                    logoutBtn.addEventListener('click', () => {
+                        this.handleLogout();
+                    });
+                }
 
                 // Module navigation
-                document.getElementById('moduleList').addEventListener('click', (e) => {
-                    const moduleItem = e.target.closest('li');
-                    if (moduleItem && moduleItem.dataset.module) {
-                        this.loadModule(moduleItem.dataset.module);
-                    }
-                });
+                const moduleList = document.getElementById('moduleList');
+                if (moduleList) {
+                    moduleList.addEventListener('click', (e) => {
+                        const moduleItem = e.target.closest('li');
+                        if (moduleItem && moduleItem.dataset.module) {
+                            this.loadModule(moduleItem.dataset.module);
+                        }
+                    });
+                }
             }
 
-            handleLogin() {
+            async handleCompanyLogin() {
+                if (!this.authService) {
+                    this.showCompanyLoginMessage('<i class="fas fa-exclamation-triangle"></i> Sistem hazr deil. Lütfen bekleyin...', 'error');
+                    return;
+                }
+
+                const companyCode = document.getElementById('companyCode').value.trim();
+                const username = document.getElementById('companyUsername').value.trim();
+                const password = document.getElementById('companyPassword').value;
+
+                // Giri butonunu devre d brak ve yükleniyor durumuna getir
+                const loginBtn = document.querySelector('#companyLoginForm .company-login-btn');
+                const originalText = loginBtn.innerHTML;
+                
+                loginBtn.innerHTML = '<i class="fas fa-spinner spinner"></i> Giri yaplyor...';
+                loginBtn.disabled = true;
+
+                this.showCompanyLoginMessage('<i class="fas fa-spinner spinner"></i> Giri yaplyor...', 'info');
+
+                try {
+                    const result = await this.authService.login(companyCode, username, password);
+                    
+                    if (result.success) {
+                        this.showCompanyLoginMessage('<i class="fas fa-check-circle"></i> Giri baarl! Yönlendiriliyorsunuz...', 'success');
+                        
+                        this.currentUser = result.user;
+                        this.currentCompany = result.company;
+                        
+                        setTimeout(() => {
+                            this.showApp();
+                        }, 1500);
+                    } else {
+                        this.showCompanyLoginMessage(`<i class="fas fa-exclamation-circle"></i> Hata: ${result.error}`, 'error');
+                    }
+                } catch (error) {
+                    console.error('Login error:', error);
+                    this.showCompanyLoginMessage(`<i class="fas fa-exclamation-triangle"></i> Sistem hatas: ${error.message}`, 'error');
+                } finally {
+                    loginBtn.innerHTML = originalText;
+                    loginBtn.disabled = false;
+                }
+            }
+
+            handleOriginalLogin() {
+                // Orijinal login mant (fallback)
                 const username = document.getElementById('username').value;
                 const password = document.getElementById('password').value;
                 const errorDiv = document.getElementById('loginError');
@@ -1572,6 +1881,11 @@
                 
                 if (user && user.password === password) {
                     this.currentUser = user;
+                    this.currentCompany = {
+                        company_code: 'DEMO',
+                        company_name: 'Demo Corporation',
+                        plan_type: 'enterprise'
+                    };
                     localStorage.setItem('tlb_user', JSON.stringify(user));
                     this.showApp();
                     errorDiv.classList.add('hidden');
@@ -1581,81 +1895,178 @@
                 }
             }
 
-            handleLogout() {
-                this.currentUser = null;
-                localStorage.removeItem('tlb_user');
-                this.showLogin();
-                document.getElementById('loginForm').reset();
-            }
-
-            checkAuth() {
-                const userData = localStorage.getItem('tlb_user');
-                if (userData) {
-                    this.currentUser = JSON.parse(userData);
-                    this.showApp();
+            showCompanyLoginMessage(message, type = 'info') {
+                const messageDiv = document.getElementById('companyLoginMessage');
+                messageDiv.innerHTML = message;
+                messageDiv.className = 'login-message';
+                
+                switch (type) {
+                    case 'info':
+                        messageDiv.classList.add('login-info-message');
+                        break;
+                    case 'success':
+                        messageDiv.classList.add('login-success-message');
+                        break;
+                    case 'error':
+                        messageDiv.classList.add('login-error-message');
+                        break;
                 }
             }
 
-            showLogin() {
-                document.getElementById('loginScreen').classList.remove('hidden');
+            handleLogout() {
+                if (this.authService) {
+                    this.authService.logout();
+                }
+                this.currentUser = null;
+                this.currentCompany = null;
+                localStorage.removeItem('tlb_user');
+                sessionStorage.removeItem('current_company');
+                sessionStorage.removeItem('current_user');
+                sessionStorage.removeItem('company_id');
+                sessionStorage.removeItem('user_id');
+                this.showCompanyLogin();
+            }
+
+            checkAuth() {
+                // Önce session storage'dan kontrol et (Supabase)
+                const companyStr = sessionStorage.getItem('current_company');
+                const userStr = sessionStorage.getItem('current_user');
+                
+                if (companyStr && userStr) {
+                    try {
+                        this.currentCompany = JSON.parse(companyStr);
+                        this.currentUser = JSON.parse(userStr);
+                        this.showApp();
+                        return;
+                    } catch (error) {
+                        console.error('Session parse error:', error);
+                    }
+                }
+
+                // Fallback: localStorage kontrolü
+                const userData = localStorage.getItem('tlb_user');
+                if (userData) {
+                    try {
+                        this.currentUser = JSON.parse(userData);
+                        this.currentCompany = {
+                            company_code: 'DEMO',
+                            company_name: 'Demo Corporation',
+                            plan_type: 'enterprise'
+                        };
+                        this.showApp();
+                    } catch (error) {
+                        console.error('LocalStorage parse error:', error);
+                    }
+                }
+            }
+
+            isAuthenticated() {
+                return !!(this.currentUser && this.currentCompany);
+            }
+
+            showCompanyLogin() {
+                document.getElementById('companyLoginScreen').classList.remove('hidden');
+                document.getElementById('loginScreen').classList.add('hidden');
                 document.getElementById('appContainer').classList.add('hidden');
+                
+                // Formlar temizle
+                document.getElementById('companyLoginForm').reset();
+                document.getElementById('loginForm').reset();
             }
 
             showApp() {
+                document.getElementById('companyLoginScreen').classList.add('hidden');
                 document.getElementById('loginScreen').classList.add('hidden');
                 document.getElementById('appContainer').classList.remove('hidden');
                 
-                // Update user info
-                document.getElementById('userName').textContent = this.currentUser.fullName;
-                document.getElementById('userRole').textContent = this.currentUser.role;
+                // Kullanc bilgilerini güncelle
+                this.updateUserInfo();
+                
+                // Dashboard'u yükle
+                this.loadModule('dashboard');
+            }
+
+            updateUserInfo() {
+                if (this.currentUser && this.currentCompany) {
+                    const userName = this.currentUser.full_name || this.currentUser.username || this.currentUser.fullName;
+                    const userRole = this.currentUser.role || 'User';
+                    const companyName = this.currentCompany.company_name || 'Demo Company';
+                    
+                    document.getElementById('userName').textContent = userName;
+                    document.getElementById('userRole').textContent = `${companyName} - ${userRole}`;
+                }
             }
 
             loadModule(moduleId) {
                 this.currentModule = moduleId;
                 
-                // Update active module
+                // Aktif modülü güncelle
                 document.querySelectorAll('#moduleList li').forEach(li => {
                     li.classList.remove('active');
                 });
-                document.querySelector(`[data-module="${moduleId}"]`).classList.add('active');
+                const activeModule = document.querySelector(`[data-module="${moduleId}"]`);
+                if (activeModule) {
+                    activeModule.classList.add('active');
+                }
 
-                // Load module content
+                // Modül içeriini yükle
                 const content = document.getElementById('moduleContent');
-                
+                if (!content) return;
+
+                // irket bilgisini ekle
+                const companyInfo = this.currentCompany ? 
+                    `<p><small>irket: ${this.currentCompany.company_name} | Plan: ${this.currentCompany.plan_type}</small></p>` : '';
+
                 switch(moduleId) {
                     case 'dashboard':
-                        this.loadDashboard(content);
+                        this.loadDashboard(content, companyInfo);
                         break;
                     case 'finance':
-                        this.loadFinance(content);
+                        this.loadFinance(content, companyInfo);
                         break;
                     case 'logistics':
-                        this.loadLogistics(content);
+                        this.loadLogistics(content, companyInfo);
                         break;
                     case 'crm':
-                        this.loadCRM(content);
+                        this.loadCRM(content, companyInfo);
                         break;
                     case 'inventory':
-                        this.loadInventory(content);
+                        this.loadInventory(content, companyInfo);
                         break;
                     case 'hr':
-                        this.loadHR(content);
+                        this.loadHR(content, companyInfo);
                         break;
                     case 'reports':
-                        this.loadReports(content);
+                        this.loadReports(content, companyInfo);
                         break;
                     default:
-                        content.innerHTML = '<h2>Module Under Development</h2>';
+                        content.innerHTML = `
+                            <div class="module-header">
+                                <div>
+                                    <h2><i class="fas fa-cube"></i> ${moduleId.charAt(0).toUpperCase() + moduleId.slice(1)}</h2>
+                                    <p>This module is under development</p>
+                                    ${companyInfo}
+                                </div>
+                            </div>
+                            <div class="stats-grid">
+                                <div class="stat-card">
+                                    <div class="stat-value">Coming Soon</div>
+                                    <div class="stat-label">Feature Development</div>
+                                </div>
+                            </div>
+                        `;
                 }
             }
 
-            loadDashboard(content) {
+            loadDashboard(content, companyInfo) {
+                const userName = this.currentUser?.full_name || this.currentUser?.username || this.currentUser?.fullName || 'User';
                 content.innerHTML = `
                     <div class="dashboard">
                         <div class="dashboard-header">
                             <div>
                                 <h1><i class="fas fa-tachometer-alt"></i> Dashboard</h1>
-                                <p>Welcome back, ${this.currentUser.fullName}!</p>
+                                <p>Welcome back, ${userName}!</p>
+                                ${companyInfo}
                             </div>
                             <div class="header-actions">
                                 <button class="btn btn-primary" onclick="app.refreshDashboard()">
@@ -1852,13 +2263,14 @@
                 `;
             }
 
-            loadFinance(content) {
+            loadFinance(content, companyInfo) {
                 content.innerHTML = `
                     <div class="finance-module">
                         <div class="module-header">
                             <div>
                                 <h2><i class="fas fa-file-invoice-dollar"></i> Finance Management</h2>
                                 <p>Manage invoices, payments, and financial operations</p>
+                                ${companyInfo}
                             </div>
                             <div class="header-actions">
                                 <button class="btn btn-primary" onclick="app.showAddInvoice()">
@@ -2062,13 +2474,14 @@
                 `;
             }
 
-            loadLogistics(content) {
+            loadLogistics(content, companyInfo) {
                 content.innerHTML = `
                     <div class="logistics-module">
                         <div class="module-header">
                             <div>
                                 <h2><i class="fas fa-truck"></i> Logistics Management</h2>
                                 <p>Track shipments, manage carriers, and optimize delivery routes</p>
+                                ${companyInfo}
                             </div>
                             <div class="header-actions">
                                 <button class="btn btn-primary" onclick="app.createShipment()">
@@ -2296,13 +2709,14 @@
                 `;
             }
 
-            loadCRM(content) {
+            loadCRM(content, companyInfo) {
                 content.innerHTML = `
                     <div class="crm-module">
                         <div class="module-header">
                             <div>
                                 <h2><i class="fas fa-users"></i> Customer Relationship Management</h2>
                                 <p>Manage customer interactions, track leads, and grow your business</p>
+                                ${companyInfo}
                             </div>
                             <div class="header-actions">
                                 <button class="btn btn-primary" onclick="app.addCustomer()">
@@ -2548,13 +2962,14 @@
                 `;
             }
 
-            loadInventory(content) {
+            loadInventory(content, companyInfo) {
                 content.innerHTML = `
                     <div class="inventory-module">
                         <div class="module-header">
                             <div class="header-content">
                                 <h1><i class="fas fa-boxes"></i> Inventory Management</h1>
                                 <p>Manage stock levels, track products, and optimize inventory operations</p>
+                                ${companyInfo}
                             </div>
                             <div class="header-actions">
                                 <button class="btn btn-primary" onclick="app.showAddProduct()">
@@ -2827,13 +3242,14 @@
                 `;
             }
 
-            loadHR(content) {
+            loadHR(content, companyInfo) {
                 content.innerHTML = `
                     <div class="hr-module">
                         <div class="module-header">
                             <div>
                                 <h2><i class="fas fa-user-tie"></i> Human Resources Management</h2>
                                 <p>Manage employees, payroll, attendance, and HR operations</p>
+                                ${companyInfo}
                             </div>
                             <div class="header-actions">
                                 <button class="btn btn-primary" onclick="app.addEmployee()">
@@ -3170,13 +3586,14 @@
                 `;
             }
 
-            loadReports(content) {
+            loadReports(content, companyInfo) {
                 content.innerHTML = `
                     <div class="reports-module">
                         <div class="module-header">
                             <div>
                                 <h2><i class="fas fa-chart-bar"></i> Reports & Analytics</h2>
                                 <p>Generate comprehensive business intelligence reports and insights</p>
+                                ${companyInfo}
                             </div>
                             <div class="header-actions">
                                 <button class="btn btn-primary" onclick="app.createCustomReport()">
@@ -3654,7 +4071,7 @@
                 `;
             }
 
-            // Placeholder methods for actions
+            // Placeholder methods for actions (orijinal halleriyle korundu)
             refreshDashboard() {
                 alert('Refreshing dashboard data...');
             }
@@ -3852,6 +4269,14 @@
 
         // Initialize the application
         const app = new TLBErpApp();
+
+        // Global eriim için
+        window.app = app;
+
+        console.log(' TLB ERP Multi-Company App Started');
+        console.log(' Features: Real-time Supabase integration');
+        console.log(' Security: Company-based authentication');
+        console.log(' Demo Companies: ABC123, DEF456');
     </script>
 </body>
 </html>
