@@ -1,27 +1,13 @@
 import { defineConfig } from 'vite'
-import { resolve } from 'path'
 
 export default defineConfig({
   build: {
     outDir: 'dist',
     sourcemap: false,
-    rollupOptions: {
-      input: {
-        main: resolve(__dirname, 'index.html')
-      }
-    }
+    assetsDir: 'assets',
+    emptyOutDir: true
   },
-  server: {
-    port: 3000,
-    open: true
-  },
-  // SPA için doru ayar:
-  appType: 'spa',
+  base: './',
   publicDir: 'public',
-  // Vercel için base path:
-  base: '/',
-  // Build optimizasyonu:
-  optimizeDeps: {
-    include: ['vue', 'pinia']
-  }
+  appType: 'spa'
 })
