@@ -4,7 +4,7 @@ import { resolve } from 'path'
 export default defineConfig({
   build: {
     outDir: 'dist',
-    sourcemap: true,
+    sourcemap: false,
     rollupOptions: {
       input: {
         main: resolve(__dirname, 'index.html')
@@ -18,6 +18,10 @@ export default defineConfig({
   // SPA için doru ayar:
   appType: 'spa',
   publicDir: 'public',
-  // Base path için (Vercel deploy için önemli):
-  base: './'
+  // Vercel için base path:
+  base: '/',
+  // Build optimizasyonu:
+  optimizeDeps: {
+    include: ['vue', 'pinia']
+  }
 })

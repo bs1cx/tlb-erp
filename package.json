@@ -1,6 +1,5 @@
 {
   "name": "tlb-erp",
-  "version": "1.0.0",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -8,10 +7,10 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@supabase/supabase-js": "^2.38.0",
-    "bcryptjs": "^3.0.2"
+    "vue": "^3.3.0",
+    "pinia": "^2.1.0"
   },
   "devDependencies": {
-    "vite": "^4.5.14"
+    "vite": "^4.4.0"
   }
 }
