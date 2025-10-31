@@ -1,50 +1,76 @@
 import { createClient } from '@supabase/supabase-js'
+import bcrypt from 'bcryptjs'
 
 export class AuthService {
   constructor() {
     this.currentCompany = null
     this.currentUser = null
     this.supabase = null
+    this.failedAttempts = new Map()
     this.initializeSupabase()
   }
 
-  // Supabase balantsn balat
+  // Supabase baðlantýsýný baþlat
   initializeSupabase() {
     const supabaseUrl = import.meta.env.VITE_SUPABASE_URL
     const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY
     
-    if (supabaseUrl && supabaseKey) {
-      this.supabase = createClient(supabaseUrl, supabaseKey)
-      console.log('Supabase balants balatld')
-    } else {
+    if (!supabaseUrl || !supabaseKey) {
       console.error('Supabase environment variables not found')
-      throw new Error('Supabase yaplandrmas bulunamad')
+      throw new Error('Sunucu yapýlandýrmasý eksik. Lütfen sistem yöneticinizle iletiþime geçin.')
     }
+
+    this.supabase = createClient(supabaseUrl, supabaseKey)
+    console.log('Supabase baþarýyla baþlatýldý')
   }
 
-  // irket girii + kullanc girii
+  // Þirket giriþi + kullanýcý giriþi
   async login(companyCode, username, password) {
     try {
-      console.log('Giri denemesi:', { companyCode, username })
+      console.log('Giriþ denemesi:', { companyCode, username })
 
-      // 1. irketi Supabase'den kontrol et
-      const company = await this.getCompanyFromSupabase(companyCode)
-      if (!company) {
-        throw new Error('irket bulunamad - Geçersiz irket kodu')
+      // Rate limiting kontrolü
+      const attemptKey = `${companyCode}-${username}`
+      const attempts = this.failedAttempts.get(attemptKey) || 0
+      
+      if (attempts >= 5) {
+        throw new Error('Çok fazla baþarýsýz giriþ denemesi. Lütfen 15 dakika sonra tekrar deneyin.')
       }
 
-      console.log('irket bulundu:', company.company_name)
+      // Validasyon
+      if (!companyCode?.trim() || !username?.trim() || !password) {
+        throw new Error('Tüm alanlar zorunludur')
+      }
 
-      // 2. Kullancy irket içinde bul
+      // 1. Þirketi Supabase'den kontrol et
+      const company = await this.getCompanyFromSupabase(companyCode.toUpperCase())
+      if (!company) {
+        throw new Error('Þirket bulunamadý - Geçersiz þirket kodu')
+      }
+
+      console.log('Þirket bulundu:', company.company_name)
+
+      // 2. Kullanýcýyý þirket içinde bul
       const user = await this.authenticateUser(company.id, username, password)
       if (!user) {
-        throw new Error('Kullanc bulunamad veya ifre hatal')
+        this.failedAttempts.set(attemptKey, attempts + 1)
+        setTimeout(() => {
+          this.failedAttempts.delete(attemptKey)
+        }, 15 * 60 * 1000) // 15 dakika
+        
+        throw new Error('Kullanýcý bulunamadý veya þifre hatalý')
       }
 
-      // 3. Son giri tarihini güncelle
+      // 3. Baþarýlý giriþ - rate limiting'i temizle
+      this.failedAttempts.delete(attemptKey)
+
+      // 4. Son giriþ tarihini güncelle
       await this.updateLastLogin(user.id)
 
-      // 4. Giri baarl
+      // 5. JWT token oluþtur
+      const authToken = this.generateAuthToken(user)
+
+      // 6. Giriþ baþarýlý
       this.currentCompany = company
       this.currentUser = user
       
@@ -53,25 +79,66 @@ export class AuthService {
       sessionStorage.setItem('current_user', JSON.stringify(user))
       sessionStorage.setItem('company_id', company.id)
       sessionStorage.setItem('user_id', user.id)
+      sessionStorage.setItem('auth_token', authToken)
 
-      console.log('Giri baarl:', user.full_name)
+      console.log('Giriþ baþarýlý:', user.full_name)
 
       return {
         success: true,
         company: company,
-        user: user
+        user: user,
+        token: authToken
       }
 
     } catch (error) {
-      console.error('Giri hatas:', error)
+      console.error('Giriþ hatasý:', error)
+      
+      // Hassas hata mesajlarýný filtrele
+      const safeMessage = error.message.includes('þifre') || 
+                         error.message.includes('kullanýcý') || 
+                         error.message.includes('Þirket bulunamadý')
+        ? 'Kullanýcý adý veya þifre hatalý' 
+        : error.message
+      
       return {
         success: false,
-        error: error.message
+        error: safeMessage
       }
     }
   }
 
-  // Supabase'den irket bul
+  // JWT token oluþturma
+  generateAuthToken(user) {
+    // Basit bir token oluþturma (production'da JWT kütüphanesi kullanýn)
+    const tokenData = {
+      userId: user.id,
+      companyId: user.company_id,
+      role: user.role,
+      timestamp: Date.now(),
+      expires: Date.now() + (24 * 60 * 60 * 1000) // 24 saat
+    }
+    
+    const token = btoa(JSON.stringify(tokenData))
+    return token
+  }
+
+  // Token doðrulama
+  verifyToken(token) {
+    try {
+      const tokenData = JSON.parse(atob(token))
+      
+      if (tokenData.expires < Date.now()) {
+        return null // Token süresi dolmuþ
+      }
+      
+      return tokenData
+    } catch (error) {
+      console.error('Token doðrulama hatasý:', error)
+      return null
+    }
+  }
+
+  // Supabase'den þirket bul
   async getCompanyFromSupabase(companyCode) {
     try {
       const { data, error } = await this.supabase
@@ -82,20 +149,20 @@ export class AuthService {
         .single()
 
       if (error) {
-        console.error('irket sorgu hatas:', error)
+        console.error('Þirket sorgu hatasý:', error)
         return null
       }
       return data
     } catch (error) {
-      console.error('irket sorgu hatas:', error)
+      console.error('Þirket sorgu hatasý:', error)
       return null
     }
   }
 
-  // Kullanc dorulama (Supabase)
+  // Kullanýcý doðrulama (Supabase)
   async authenticateUser(companyId, username, password) {
     try {
-      // Kullancy irket içinde bul
+      // Kullanýcýyý þirket içinde bul
       const { data: user, error } = await this.supabase
         .from('users')
         .select('*')
@@ -105,7 +172,7 @@ export class AuthService {
         .single()
 
       if (error) {
-        console.error('Kullanc sorgu hatas:', error)
+        console.error('Kullanýcý sorgu hatasý:', error)
         return null
       }
 
@@ -113,7 +180,7 @@ export class AuthService {
         return null
       }
 
-      // ifre dorulama
+      // Þifre doðrulama (bcrypt ile)
       const isValidPassword = await this.verifyPassword(password, user.password_hash)
       if (!isValidPassword) {
         return null
@@ -122,30 +189,33 @@ export class AuthService {
       return this.formatUserFromSupabase(user)
 
     } catch (error) {
-      console.error('Kullanc dorulama hatas:', error)
+      console.error('Kullanýcý doðrulama hatasý:', error)
       return null
     }
   }
 
-  // ifre dorulama (basit hash karlatrma - production'da bcrypt kullanlmal)
+  // Þifre doðrulama (bcrypt ile güvenli)
   async verifyPassword(inputPassword, storedHash) {
-    // Bu örnekte basit hash kullanyoruz, production'da bcrypt kullann
-    const inputHash = this.hashPassword(inputPassword)
-    return inputHash === storedHash
-  }
-
-  // ifre hashleme (basit örnek - production'da bcrypt kullann)
-  hashPassword(password) {
-    let hash = 0
-    for (let i = 0; i < password.length; i++) {
-      const char = password.charCodeAt(i)
-      hash = ((hash << 5) - hash) + char
-      hash = hash & hash
+    try {
+      return await bcrypt.compare(inputPassword, storedHash)
+    } catch (error) {
+      console.error('Þifre doðrulama hatasý:', error)
+      return false
     }
-    return hash.toString()
   }
 
-  // Supabase kullanc formatn uygulama formatna çevir
+  // Þifre hashleme (bcrypt ile güvenli)
+  async hashPassword(password) {
+    try {
+      const saltRounds = 12
+      return await bcrypt.hash(password, saltRounds)
+    } catch (error) {
+      console.error('Þifre hashleme hatasý:', error)
+      throw new Error('Þifre iþleme hatasý')
+    }
+  }
+
+  // Supabase kullanýcý formatýný uygulama formatýna çevir
   formatUserFromSupabase(supabaseUser) {
     return {
       id: supabaseUser.id,
@@ -160,7 +230,7 @@ export class AuthService {
     }
   }
 
-  // Son giri tarihini güncelle
+  // Son giriþ tarihini güncelle
   async updateLastLogin(userId) {
     try {
       const { error } = await this.supabase
@@ -172,14 +242,14 @@ export class AuthService {
         .eq('id', userId)
 
       if (error) {
-        console.error('Son giri güncelleme hatas:', error)
+        console.error('Son giriþ güncelleme hatasý:', error)
       }
     } catch (error) {
-      console.error('Son giri güncelleme hatas:', error)
+      console.error('Son giriþ güncelleme hatasý:', error)
     }
   }
 
-  // Çk
+  // Çýkýþ
   logout() {
     this.currentCompany = null
     this.currentUser = null
@@ -187,16 +257,26 @@ export class AuthService {
     sessionStorage.removeItem('current_user')
     sessionStorage.removeItem('company_id')
     sessionStorage.removeItem('user_id')
+    sessionStorage.removeItem('auth_token')
   }
 
-  // Giri kontrolü
+  // Giriþ kontrolü
   isLoggedIn() {
+    const token = sessionStorage.getItem('auth_token')
+    if (!token) return false
+
+    const tokenData = this.verifyToken(token)
+    if (!tokenData) {
+      this.logout()
+      return false
+    }
+
     const company = sessionStorage.getItem('current_company')
     const user = sessionStorage.getItem('current_user')
     return !!(company && user)
   }
 
-  // Mevcut kullancy getir
+  // Mevcut kullanýcýyý getir
   getCurrentUser() {
     if (this.currentUser) return this.currentUser
     
@@ -208,7 +288,7 @@ export class AuthService {
     return null
   }
 
-  // Mevcut irketi getir
+  // Mevcut þirketi getir
   getCurrentCompany() {
     if (this.currentCompany) return this.currentCompany
     
@@ -220,10 +300,15 @@ export class AuthService {
     return null
   }
 
-  // Demo data olutur (ilk kurulum için)
+  // Token'ý getir
+  getCurrentToken() {
+    return sessionStorage.getItem('auth_token')
+  }
+
+  // Demo data oluþtur (ilk kurulum için)
   async initializeDemoData() {
     try {
-      // Demo irketleri olutur
+      // Demo þirketleri oluþtur
       const demoCompanies = [
         {
           company_code: 'ABC123',
@@ -252,17 +337,17 @@ export class AuthService {
             .single()
 
           if (error) {
-            console.error('Demo irket oluturma hatas:', error)
+            console.error('Demo þirket oluþturma hatasý:', error)
             continue
           }
 
-          // Demo kullanclar olutur
+          // Demo kullanýcýlar oluþtur
           const demoUsers = [
             {
               company_id: newCompany.id,
               username: 'admin',
               email: `admin@${companyData.company_code.toLowerCase()}.com`,
-              password_hash: this.hashPassword('admin123'),
+              password_hash: await this.hashPassword('admin123'),
               full_name: 'Demo Administrator',
               role: 'admin',
               is_active: true
@@ -271,7 +356,7 @@ export class AuthService {
               company_id: newCompany.id,
               username: 'user',
               email: `user@${companyData.company_code.toLowerCase()}.com`,
-              password_hash: this.hashPassword('user123'),
+              password_hash: await this.hashPassword('user123'),
               full_name: 'Demo User',
               role: 'user',
               is_active: true
@@ -283,14 +368,61 @@ export class AuthService {
             .insert(demoUsers)
 
           if (userError) {
-            console.error('Demo kullanc oluturma hatas:', userError)
+            console.error('Demo kullanýcý oluþturma hatasý:', userError)
           } else {
-            console.log('Demo data oluturuldu:', companyData.company_code)
+            console.log('Demo data oluþturuldu:', companyData.company_code)
           }
         }
       }
     } catch (error) {
-      console.error('Demo data oluturma hatas:', error)
+      console.error('Demo data oluþturma hatasý:', error)
+    }
+  }
+
+  // Þifre deðiþtirme
+  async changePassword(currentPassword, newPassword) {
+    try {
+      const currentUser = this.getCurrentUser()
+      if (!currentUser) {
+        throw new Error('Kullanýcý bulunamadý')
+      }
+
+      // Mevcut þifreyi doðrula
+      const userData = await this.supabase
+        .from('users')
+        .select('password_hash')
+        .eq('id', currentUser.id)
+        .single()
+
+      if (!userData.data) {
+        throw new Error('Kullanýcý verileri alýnamadý')
+      }
+
+      const isValid = await this.verifyPassword(currentPassword, userData.data.password_hash)
+      if (!isValid) {
+        throw new Error('Mevcut þifre hatalý')
+      }
+
+      // Yeni þifreyi hashle ve güncelle
+      const newPasswordHash = await this.hashPassword(newPassword)
+      
+      const { error } = await this.supabase
+        .from('users')
+        .update({ 
+          password_hash: newPasswordHash,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', currentUser.id)
+
+      if (error) {
+        throw new Error('Þifre güncellenemedi')
+      }
+
+      return { success: true, message: 'Þifre baþarýyla deðiþtirildi' }
+
+    } catch (error) {
+      console.error('Þifre deðiþtirme hatasý:', error)
+      return { success: false, error: error.message }
     }
   }
 }
