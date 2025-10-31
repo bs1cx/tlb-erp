@@ -1,15 +1,23 @@
 import { defineConfig } from 'vite'
+import { resolve } from 'path'
 
 export default defineConfig({
   build: {
     outDir: 'dist',
-    sourcemap: true
+    sourcemap: true,
+    rollupOptions: {
+      input: {
+        main: resolve(__dirname, 'index.html')
+      }
+    }
   },
   server: {
     port: 3000,
     open: true
   },
-  // Önemli: HTML dosyasn doru ilemesi için
-  appType: 'mpa', // Multiple Page Application
-  publicDir: 'public'
+  // SPA için doru ayar:
+  appType: 'spa',
+  publicDir: 'public',
+  // Base path için (Vercel deploy için önemli):
+  base: './'
 })

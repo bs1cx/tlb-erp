@@ -1,4 +1,4 @@
-import { createRouter, createWebHistory } from 'vue-router'
+import { createRouter, createWebHashHistory } from 'vue-router'
 import { authService } from './services/authService.js'
 
 // Lazy-loaded components for better performance
@@ -67,7 +67,7 @@ const routes = [
 ]
 
 const router = createRouter({
-  history: createWebHistory(),
+  history: createWebHashHistory(),
   routes
 })
 
@@ -93,7 +93,7 @@ router.beforeEach((to, from, next) => {
     
     if (user && company) {
       // Basit rol bazl eriim kontrolü
-      const hasAccess = this.checkModuleAccess(user.role, requiresModule)
+      const hasAccess = router.checkModuleAccess(user.role, requiresModule)
       if (hasAccess) {
         next()
       } else {
